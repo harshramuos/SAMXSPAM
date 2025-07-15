@@ -1,0 +1,12 @@
+services:
+  - type: web  # Required for persistent services (like bots)
+    name: altron-bot  # Your bot's name
+    env: docker  # Specifies Docker-based deployment
+    dockerfilePath: ./Dockerfile  # Path to your Dockerfile
+    plan: free  # Free tier (or "starter" for paid)
+    resources:
+      cpu: 0.25  # Shared CPU (free tier)
+      memory: 0.5GB  # 512MB RAM (free tier)
+    envVars:
+      - key: BOT_TOKEN  # Example (replace with your bot's env vars)
+        sync: false  # Set to `true` if using Render's env group
