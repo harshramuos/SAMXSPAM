@@ -8,7 +8,7 @@ START_BUTTON = [
         Button.inline("• ᴄᴏᴍᴍᴀɴᴅs •", data="help_back")
     ],
     [
-        Button.url("• ᴄʜᴀɴɴᴇʟ •", "https://t.me/KomalMusicRobotChannel"),
+        Button.url("• ᴄʜᴀɴɴᴇʟ •", "https://t.me/KomalBotsNetwork"),
         Button.url("• sᴜᴘᴘᴏʀᴛ •", "https://t.me/KomalMusicRobotSupport")
     ],
     [
