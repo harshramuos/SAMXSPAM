@@ -1,7 +1,7 @@
 # 🔥 𝐒𝐀𝐌 𝐗 𝐒𝐏𝐀𝐌 BOT
 
-[![Telegram Channel](https://img.shields.io/badge/Update%20Channel-KomalBotsNetwork-blue?style=flat&logo=telegram)](https://t.me/SpamBotsh)
-[![Support Group](https://img.shields.io/badge/Support%20Group-KomalMusicRobotSupport-green?style=flat&logo=telegram)](https://t.me/SpamBotsh)
+[![Telegram Channel](https://img.shields.io/badge/Update%20Channel-SamBotsNetwork-blue?style=flat&logo=telegram)](https://t.me/SpamBotsh)
+[![Support Group](https://img.shields.io/badge/Support%20Group-sam x spamRobotSupport-green?style=flat&logo=telegram)](https://t.me/SpamBotsh)
 
 ![Banner](https://files.catbox.moe/lg4old.jpg)
 
