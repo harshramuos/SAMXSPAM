@@ -1,102 +1,188 @@
 from telethon import events, Button
 import asyncio
+import time
 from config import X1, X2, X3, X4, X5, X6, X7, X8, X9, X10, SUDO_USERS, CMD_HNDLR as hl
 
 clients = [X1, X2, X3, X4, X5, X6, X7, X8, X9, X10]
 
-HELP_STRING = (
-    "\n💥 <b>𝗛𝗘𝗟𝗣 𝗠𝗘𝗡𝗨</b> 💥\n\n"
-    "⚙️ Click a button below to view commands.\n"
-    "🔧 <b>Developer:</b> <a href='https://t.me/ItsKapilYadav'>@ItsKapilYadav</a>"
+# User data storage with thread-safe approach
+user_data = {}  # Format: {user_id: {'theme': 'dark/light', 'last_interaction': timestamp}}
+
+# === Themes ===
+def get_help_string(theme="dark"):
+    if theme == "light":
+        return (
+            "<b>╭──『 ⚙️ BOT COMMAND PANEL 』──╮</b>\n"
+            "<b>│</b> 🧑‍💻 Owner: <a href='https://t.me/ItsKapilYadav'>@ItsKapilYadav</a>\n"
+            "<b>│</b> 🛰 Status: <code>Online</code>\n"
+            "<b>│</b> 📁 Modules: Admin | Spam | Raid | Dev\n"
+            "<b>╰──────────────────────────────╯</b>\n\n"
+            "<b>🌐 Select a category below:</b>\n"
+            "<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b>"
+        )
+    else:
+        return (
+            "<b>╔═『 📡 HACKER CONSOLE PANEL 📡 』═╗</b>\n"
+            "<b>║</b> 👤 Owner: <a href='https://t.me/ItsKapilYadav'>@ItsKapilYadav</a>\n"
+            "<b>║</b> 🖥 Status: <code>Active</code>\n"
+            "<b>║</b> 🔗 Modules: Admin | 🕶 | 🔒 | 📡\n"
+            "<b>╚═════════════════════════════╝</b>\n\n"
+            "<b><code>[Select a signal below to continue]</code></b>\n"
+            "<b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b>"
+        )
+
+def get_help_buttons(theme="dark"):
+    return [
+        [Button.inline("🕶 SPAM", data="spam"), Button.inline("🔒 RAID", data="raid")],
+        [Button.inline("👥 ADMIN", data="group"), Button.inline("📡 TOOLS", data="extra")],
+        [Button.inline("🌗 Toggle Theme", data="toggle_theme")],
+        [Button.url("📢 Updates", "https://t.me/KomalMusicRobotSupport"),
+         Button.url("💬 Support", "https://t.me/KomalNetwork")]
+    ]
+
+# === Modules ===
+spam_msg = (
+    "<b>╭──『 🕶 SPAM MODULE 』──╮</b>\n"
+    f"<b>│ • <code>{hl}spam</code> – Message spam</b>\n"
+    f"<b>│ • <code>{hl}pspam</code> – Adult spam</b>\n"
+    f"<b>│ • <code>{hl}hang</code> – Freeze spam</b>\n"
+    "<b>╰────────────────────────╯</b>"
 )
 
-HELP_BUTTON = [
-    [Button.inline("💣 SPAM", data=b"spam"), Button.inline("☠ RAID", data=b"raid")],
-    [Button.inline("👥 GROUP", data=b"group"), Button.inline("✨ EXTRA", data=b"extra")],
-    [
-        Button.url("📢 CHANNEL", "https://t.me/KomalMusicRobotChannel"),
-        Button.url("🛠 SUPPORT", "https://t.me/KomalMusicRobotSupport"),
-    ],
-]
+raid_msg = (
+    "<b>╭──『 🔒 RAID MODULE 』──╮</b>\n"
+    f"<b>│ • <code>{hl}raid</code> – Start raid</b>\n"
+    f"<b>│ • <code>{hl}rraid</code> – Reply raid</b>\n"
+    f"<b>│ • <code>{hl}drraid</code> – Direct reply</b>\n"
+    f"<b>│ • <code>{hl}mraid</code> – Multi-target</b>\n"
+    f"<b>│ • <code>{hl}sraid</code> – Super raid</b>\n"
+    f"<b>│ • <code>{hl}craid</code> – Combo</b>\n"
+    "<b>╰────────────────────────╯</b>"
+)
 
-# Messages
-extra_msg = f"""<b>✨ EXTRA COMMANDS</b>\n\n<code>{hl}ping</code> - Check ping
-<code>{hl}reboot</code> - Restart bot
-<code>{hl}sudo</code> - Add sudo
-<code>{hl}logs</code> - Show logs
-<code>{hl}alive</code> - Show alive message
-<code>{hl}echo</code> - Echo reply
-<code>{hl}rmecho</code> - Remove echo
-<code>{hl}leave</code> - Leave group
-<code>{hl}setwelcome</code> - Set welcome msg
-<code>{hl}setleave</code> - Set leave msg
-<code>{hl}rules</code> - Show rules
+group_msg = (
+    "<b>╭──『 👥 GROUP CONTROL 』──╮</b>\n"
+    f"<b>│ • <code>{hl}promote</code> / <code>{hl}demote</code></b>\n"
+    f"<b>│ • <code>{hl}ban</code> / <code>{hl}unban</code></b>\n"
+    f"<b>│ • <code>{hl}kick</code> / <code>{hl}mute</code></b>\n"
+    f"<b>│ • <code>{hl}warn</code> / <code>{hl}unwarn</code></b>\n"
+    f"<b>│ • <code>{hl}lock</code> / <code>{hl}unlock</code></b>\n"
+    f"<b>│ • <code>{hl}setwelcome</code> / <code>{hl}rules</code></b>\n"
+    "<b>╰────────────────────────╯</b>"
+)
 
-© @ItsKapilYadav"""
+extra_msg = (
+    "<b>╭──『 📡 DEV & EXTRA 』──╮</b>\n"
+    f"<b>│ • <code>{hl}ping</code> – Test latency</b>\n"
+    f"<b>│ • <code>{hl}reboot</code> – Restart</b>\n"
+    f"<b>│ • <code>{hl}sudo</code> – Add sudo</b>\n"
+    f"<b>│ • <code>{hl}logs</code> – Logs dump</b>\n"
+    f"<b>│ • <code>{hl}alive</code> – Check alive</b>\n"
+    f"<b>│ • <code>{hl}echo</code> / <code>{hl}rmecho</code></b>\n"
+    f"<b>│ • <code>{hl}leave</code> – Exit group</b>\n"
+    "<b>╰────────────────────────╯</b>"
+)
 
-raid_msg = f"""<b>☠ RAID COMMANDS</b>\n\n<code>{hl}raid</code> - Start raid
-<code>{hl}rraid</code> - Reply raid
-<code>{hl}drraid</code> - D reply raid
-<code>{hl}mraid</code> - Multi raid
-<code>{hl}sraid</code> - Super raid
-<code>{hl}craid</code> - Combo raid
-
-© @ItsKapilYadav"""
-
-spam_msg = f"""<b>💣 SPAM COMMANDS</b>\n\n<code>{hl}spam</code> - Start spam
-<code>{hl}pspam</code> - Porn spam
-<code>{hl}hang</code> - Hang command
-
-© @ItsKapilYadav"""
-
-group_msg = f"""<b>👥 GROUP COMMANDS</b>\n\n<code>{hl}promote</code> | <code>{hl}demote</code>
-<code>{hl}ban</code> | <code>{hl}unban</code>
-<code>{hl}kick</code> | <code>{hl}mute</code>
-<code>{hl}warn</code> | <code>{hl}unwarn</code>
-<code>{hl}lock</code> | <code>{hl}unlock</code>
-<code>{hl}setwelcome</code> | <code>{hl}setleave</code>
-<code>{hl}setrules</code> | <code>{hl}rules</code>
-
-Auto messages will be sent on join/leave.
-
-© @ItsKapilYadav"""
-
-# Button map
-button_map = {
-    "help_back": HELP_STRING,
-    "spam": spam_msg,
-    "raid": raid_msg,
-    "extra": extra_msg,
-    "group": group_msg,
-}
-
-# Help command
 async def help_handler(event):
-    if event.sender_id in SUDO_USERS:
-        await event.reply(HELP_STRING, buttons=HELP_BUTTON, parse_mode="html")
+    uid = event.sender_id
+    if uid not in SUDO_USERS:
+        return await event.delete()
 
-# Callback event
-def generate_cb(pattern, msg):
-    async def cb(event):
-        if event.query.user_id not in SUDO_USERS:
-            return await event.answer("🚫 Access Denied!", alert=True)
-        try:
-            old = (await event.get_message()).message.strip()
-            if msg.strip() == old:
-                return await event.answer("⛔ Already on this menu.", alert=True)
-            await event.edit(
-                msg,
-                buttons=[[Button.inline("⬅ Back", data=b"help_back")]] if pattern != "help_back" else HELP_BUTTON,
+    # Initialize user data if not exists
+    if uid not in user_data:
+        user_data[uid] = {'theme': 'dark', 'last_interaction': time.time()}
+    else:
+        user_data[uid]['last_interaction'] = time.time()
+    
+    theme = user_data[uid]['theme']
+    
+    try:
+        loading_msg = await event.reply("<b>🔌 Connecting to Bot Kernel...</b>", parse_mode="html")
+        
+        # Efficient loading animation
+        for i in range(1, 11):
+            progress = "█" * i + "░" * (10 - i)
+            await loading_msg.edit(
+                f"<b>🔌 Connecting to Bot Kernel...</b>\n<b>Loading [{progress}] {i*10}%</b>",
                 parse_mode="html"
             )
-            await asyncio.sleep(0.3)  # Prevent floodwait
-        except Exception as e:
-            if "MessageNotModified" not in str(e):
-                await event.answer(f"❌ Error:\n{e}", alert=True)
-    return cb
+            await asyncio.sleep(0.1)
+        
+        await loading_msg.edit(
+            get_help_string(theme),
+            buttons=get_help_buttons(theme),
+            parse_mode="html"
+        )
+    except Exception as e:
+        print(f"Error in help handler: {e}")
+        await event.respond("⚠️ An error occurred. Please try again.")
 
-# Register on all clients
+async def button_callback(event):
+    uid = event.query.user_id
+    if uid not in SUDO_USERS:
+        return await event.answer("⛔ Access Denied", alert=True)
+    
+    # Update last interaction time using current timestamp
+    if uid not in user_data:
+        user_data[uid] = {'theme': 'dark'}
+    user_data[uid]['last_interaction'] = time.time()
+    
+    data = event.data.decode('utf-8')
+    theme = user_data[uid]['theme']
+    
+    try:
+        if data == "toggle_theme":
+            # Toggle theme
+            new_theme = 'light' if theme == 'dark' else 'dark'
+            user_data[uid]['theme'] = new_theme
+            await event.edit(
+                get_help_string(new_theme),
+                buttons=get_help_buttons(new_theme),
+                parse_mode="html"
+            )
+        elif data == "help_back":
+            await event.edit(
+                get_help_string(theme),
+                buttons=get_help_buttons(theme),
+                parse_mode="html"
+            )
+        elif data == "spam":
+            await event.edit(spam_msg, buttons=[[Button.inline("🔙 Return", data="help_back")]], parse_mode="html")
+        elif data == "raid":
+            await event.edit(raid_msg, buttons=[[Button.inline("🔙 Return", data="help_back")]], parse_mode="html")
+        elif data == "group":
+            await event.edit(group_msg, buttons=[[Button.inline("🔙 Return", data="help_back")]], parse_mode="html")
+        elif data == "extra":
+            await event.edit(extra_msg, buttons=[[Button.inline("🔙 Return", data="help_back")]], parse_mode="html")
+    except Exception as e:
+        print(f"Error in button callback: {e}")
+        await event.answer("⚠️ An error occurred. Please try again.", alert=True)
+
+# === Register Handlers ===
+def register_handlers(client):
+    client.add_event_handler(
+        help_handler,
+        events.NewMessage(pattern=fr"\{hl}help(?: |$)(.*)", forwards=False)
+    )
+    client.add_event_handler(
+        button_callback,
+        events.CallbackQuery()
+    )
+
+# Register for all clients
 for client in clients:
-    client.add_event_handler(help_handler, events.NewMessage(pattern=fr"\{hl}help(?: |$)(.*)"))
-    for pattern, msg in button_map.items():
-        client.add_event_handler(generate_cb(pattern, msg), events.CallbackQuery(data=pattern.encode()))
+    register_handlers(client)
+
+# Cleanup old user data periodically
+async def cleanup_user_data():
+    while True:
+        await asyncio.sleep(3600)  # Cleanup every hour
+        current_time = time.time()
+        stale_users = [uid for uid, data in user_data.items() 
+                      if current_time - data.get('last_interaction', 0) > 86400]  # 24 hours
+        for uid in stale_users:
+            del user_data[uid]
+
+# Start cleanup task
+for client in clients:
+    client.loop.create_task(cleanup_user_data())
