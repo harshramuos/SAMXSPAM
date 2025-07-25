@@ -1,7 +1,11 @@
 import logging
 from telethon import TelegramClient
 from os import getenv
+from dotenv import load_dotenv
 from KapilYadav.data import ALTRON
+
+# Load environment variables from .env file
+load_dotenv()
 
 logging.basicConfig(
     format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s',
@@ -9,24 +13,25 @@ logging.basicConfig(
 )
 
 # VALUES REQUIRED FOR XBOTS
-API_ID = "27203"
-API_HASH = "2d5aec15f1e703a217245b30cb8"
+API_ID = int(getenv("API_ID"))
+API_HASH = getenv("API_HASH")
 
 CMD_HNDLR = getenv("CMD_HNDLR", default=".")
 hl = CMD_HNDLR  # This fixes the import issue in bot.py
 
- # Bot Tokens
-BOT_TOKEN = "7588691860:AAGx_nLnMiBwMS1AO_eo11UTgfrLkU"
-BOT_TOKEN2 = "7672872618:AOHAT32hcn-dsFNSV2X57FiiWhUAnJ5I"
-BOT_TOKEN3 = "7716554217:AAOGWk_exXGCfu50TToNnhh1J2Qf4"
-BOT_TOKEN4 = "7974842321:AAFHFzxqpKZ-tJZ40BxHILyhPV9Ti5c4"
-BOT_TOKEN5 = "7997284718:AAksmeq5AAbJrSpFJaDLrDBkcpdhM"
-BOT_TOKEN6 = "7639081689:AAEFNRPwbO7vhFWOoJtMzzaPN8owEBm0"
-BOT_TOKEN7 = "7258168624:Axm9fHozLfMw0aCLp_ezMLuqGhaW4w"
-BOT_TOKEN8 = "7643330995:AAFTM9HW38Hsj7hfL8KoSa6ckVx5oXws"
-BOT_TOKEN9 = "7336955695:AAJPm3Ga6y7ibD5GUeO7A4H5sWVVhJnU"
-BOT_TOKEN10 = "7639081689:AAENNRPwb7uvhFWOoJtMzzaPN8owEBm0"
-SUDO_USERS = list(map(lambda x: int(x), getenv("SUDO_USERS", default="5968988297").split()))
+# Bot Tokens
+BOT_TOKEN = getenv("BOT_TOKEN")
+BOT_TOKEN2 = getenv("BOT_TOKEN2")
+BOT_TOKEN3 = getenv("BOT_TOKEN3")
+BOT_TOKEN4 = getenv("BOT_TOKEN4")
+BOT_TOKEN5 = getenv("BOT_TOKEN5")
+BOT_TOKEN6 = getenv("BOT_TOKEN6")
+BOT_TOKEN7 = getenv("BOT_TOKEN7")
+BOT_TOKEN8 = getenv("BOT_TOKEN8")
+BOT_TOKEN9 = getenv("BOT_TOKEN9")
+BOT_TOKEN10 = getenv("BOT_TOKEN10")
+
+SUDO_USERS = list(map(int, getenv("SUDO_USERS", default="5968988297").split()))
 for x in ALTRON:
     SUDO_USERS.append(x)
 
